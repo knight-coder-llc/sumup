@@ -1,0 +1,6 @@
+services:
+    sumup.oauth2_authenticate:
+      class: Drupal\sumup\SumUpOAuth2
+      arguments: ['@config.factory']
+      tags:
+        - {name: sumup_oauth2}

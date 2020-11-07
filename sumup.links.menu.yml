@@ -1,0 +1,12 @@
+sumup.registered_app_settings:
+    route_name: sumup.registered_app_settings
+    title: 'Sumup Registered App Settings'
+    description: 'Configure your sumup registered application settings.'
+    parent: sumup.group.admin
+    weight: 100
+sumup.group.admin:
+    title: 'Sumup Configuration'
+    route_name: system.admin_config_automation_settings
+    parent: system.admin_config
+    description: 'Configure Sumup registered application.'
+    weight: -999

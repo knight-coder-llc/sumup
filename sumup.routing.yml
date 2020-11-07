@@ -1,0 +1,14 @@
+sumup.oauth_callback:
+  path: /authenticate/oauth_callback
+  defaults:
+        _controller: '\Drupal\sumup\Controller\SumUpController::oauth_sumup_callback'
+  requirements:
+        _permission: 'access content'
+        
+sumup.registered_app_settings:
+    path: '/admin/structure/sumup/registered_app_settings'
+    defaults:
+        _form: '\Drupal\sumup\Form\SumUpAuthForm'
+        _title: 'SumUp Registered Account Settings'
+    requirements:
+        _permission: 'administer site configuration'

@@ -1,0 +1,16 @@
+sumup.registered_app_settings:
+  type: config_object
+  label: 'Sumup Registered App Settings'
+  mapping:
+    sumup_client_id:
+      type: string
+      label: 'Client ID'
+    sumup_client_secret:
+      type: string
+      label: 'Client Secret'
+    sumup_redirect_uri:
+      type: string
+      label: 'Redirect Uri'
+    sumup_key_encryption_setting:
+      type: string
+      label: 'Encryption Profile'
