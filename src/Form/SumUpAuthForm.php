@@ -20,6 +20,11 @@ class SumUpAuthForm extends ConfigFormBase {
     protected $encryption_service;
 
     /**
+     * @var \Drupal\encrypt\Entity\EncryptionProfile
+     */
+    protected $encryption_profile;
+
+    /**
      * @var \Drupal\sumup\SumUpOAuth2Service
      */
     protected $sumup_auth_service;
@@ -27,8 +32,9 @@ class SumUpAuthForm extends ConfigFormBase {
     /**
      * Class constructor.
      */
-    public function __construct(EncryptService $encryption_service, SumUpOAuth2Service $sumup_auth_service) {
+    public function __construct(EncryptService $encryption_service, EncryptionProfile $encryption_profile, SumUpOAuth2Service $sumup_auth_service) {
         $this->encryption_service = $encryption_service;
+        $this->encryption_profile = $encryption_profile;
         $this->sumup_auth_service = $sumup_auth_service;
     }
 
@@ -40,6 +46,7 @@ class SumUpAuthForm extends ConfigFormBase {
         return new static(
             // Load the service required to construct this class.
             $container->get('encryption'),
+            $container->get('encryption_profile'),
             $container->get('sumup.oauth2_authenticate')
         );
     }
@@ -64,14 +71,30 @@ class SumUpAuthForm extends ConfigFormBase {
      * {@inheritdoc}
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
-        $encryption_service = $this->encryption_service;
+        $config = $this->config('sumup.registered_app_settings');
+
+        $encryption_profile_id = $this->encryption_profile;
+        $profile = $encryption_profile->load($encryption_profile_id);
+
+        $scope_opts = array(
+            'Transactions History' => 'transactions.history',
+            'User App Settings' => 'user.app-settings',
+            'User Profile (readonly)' => 'user.profile_readonly',
+            'User Profile' => 'user.profile',
+            'User Subaccounts' => 'user.subaccounts',
+            'User Payout Settings' => 'user.payout-settings',
+            'Products' => 'products',
+            'Payments' => 'payments',
+            'Payment Instruments' => 'payment_instruments'
+        );
 
         $form['sumup_client_id'] = array(
             '#type' => 'textfield',
             '#title' => $this->t('Client ID'),
             '#description' => $this->t('Client ID supplied when registering your app.'),
             '#default_value' => $config->get('sumup_client_id'),
-            '#maxlength' => '255'
+            '#maxlength' => '255',
+            '#required' => true
         );
 
         $form['sumup_client_secret'] = array(
@@ -79,7 +102,8 @@ class SumUpAuthForm extends ConfigFormBase {
             '#title' => $this->t('Client Secret'),
             '#description' => $this->t('Client secret key supplied when registering app.'),
             '#default_value' => $config->get('sumup_client_secret'),
-            '#maxlength' => '255'
+            '#maxlength' => '255',
+            '#required' => true
         );
 
         $form['sumup_redirect_uri'] = array(
@@ -87,7 +111,8 @@ class SumUpAuthForm extends ConfigFormBase {
             '#title' => $this->t('Redirect Uri'),
             '#description' => $this->t('Redirect after authorization.'),
             '#default_value' => $config->get('sumup_redirect_uri'),
-            '#maxlength' => '255'
+            '#maxlength' => '255',
+            '#required' => true
         );
 
         $form['sumup_key_encryption_setting'] = array(
@@ -96,9 +121,18 @@ class SumUpAuthForm extends ConfigFormBase {
             '#description' => $this->t('Associate an encryption profile to safely store your keys.'),
             '#target_type' => 'encryption_profile',
             '#selection_handler' => 'default',
-            '#default_value' => ($config->get('sumup_key_encryption_setting')) ? $encryption_profile : NULL,
+            '#default_value' => ($config->get('sumup_key_encryption_setting')) ? $profile : NULL,
             '#size' => 30,
             '#maxlength' => 1024,
+        );
+
+        $form['sumup_application_scopes'] = array(
+            '#type' => 'select',
+            '#title' => $this->t('Application Scopes'),
+            '#empty_value' => $this->t('--Select App Scopes--'),
+            '#description' => $this->t('Add permission scopes to be granted for the application.'),
+            '#default_value' => $config->get('sumup_application_scopes'),
+            '#multiple' => true
         );
 
         $form['actions']['oauth_request'] = array(
@@ -123,8 +157,8 @@ class SumUpAuthForm extends ConfigFormBase {
     protected function process_oauth() {
         $encryption_service = $this->encryption_service;
         $sumup = $this->sumup_auth_service;
-
-        $sumup->getAccess();
+        // set field before processing authentication request.
+        $sumup->requestScopeAccess();
         return;
     }
 }

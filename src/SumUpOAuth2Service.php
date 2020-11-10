@@ -27,29 +27,46 @@ class SumUpOAuth2Service {
         $this->http_client = $http_client;
     }
     /**
-     * Request application access.
+     * Request scope access confirmation.
      */
-    public function getAccess() {
+    public function requestScopeAccess() {
         
         $config = $this->config_factory('sumup.registered_app_settings');
         $client = $this->http_client;
-        $client_id = $config->get('sumup_client_id');
 
+        $client_id = $config->get('sumup_client_id');
+        $redirect_uri = $config->get('sumup_redirect_uri');
+        $scope = $config->get('sumup_application_scopes');
+        /**
+         * response_type
+         * client_id
+         * redirect_uri
+         * scope
+         * state
+         */
         $opts = array(
             'response_type' => 'code',
             'client_id' => $client_id,
-            'redirect_uri' => '',
-            'scope' => ['payments', 'user.profile_readonly', 'transactions.history']
+            'redirect_uri' => $redirect_uri,
+            'scope' => $scope
         );
 
-        $response = $client->get('https://api.sumup.com/authorize', $opts);
-        
-        if($response->getStatusCode() != 200) {
-            \Drupal::logger('sumup', print_r('Response Status: ' . $response->getStatusCode(), true));
-            return;
-        }
+        \Drupal::logger('sumup', print_r('Options: ' . $opts, true));
 
-        \Drupal::logger('sumup', print_r('Response Status: ' . $response->getStatusCode(), true));
+        // $response = $client->get('https://api.sumup.com/authorize', $opts);
+        
+        // if($response->getStatusCode() != 200) {
+        //     \Drupal::logger('sumup', print_r('Response Status: ' . $response->getStatusCode(), true));
+        //     return;
+        // }
+
+        // \Drupal::logger('sumup', print_r('Response Status: ' . $response->getStatusCode(), true));
 
     }
+
+    public function requestToken() {}
+
+    public function validateResponse() {}
+
+    protected function saveAccessToken() {}
 }

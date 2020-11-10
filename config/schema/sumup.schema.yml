@@ -11,6 +11,12 @@ sumup.registered_app_settings:
     sumup_redirect_uri:
       type: string
       label: 'Redirect Uri'
+    sumup_application_scopes:
+      type: sequence
+      label: 'Sumup Application Scopes'
+      sequence:
+        type: string
+        label: 'Scope'
     sumup_key_encryption_setting:
       type: string
       label: 'Encryption Profile'
