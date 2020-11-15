@@ -73,8 +73,9 @@ class SumUpAuthForm extends ConfigFormBase {
     public function buildForm(array $form, FormStateInterface $form_state) {
         $config = $this->config('sumup.registered_app_settings');
 
-        $encryption_profile_id = $this->encryption_profile;
+        $encryption_profile_id = $config->get('sumup_key_encryption_setting');
         $profile = $encryption_profile->load($encryption_profile_id);
+        $encryption_service = $this->encryption_service;
 
         $scope_opts = array(
             'Transactions History' => 'transactions.history',
@@ -92,7 +93,7 @@ class SumUpAuthForm extends ConfigFormBase {
             '#type' => 'textfield',
             '#title' => $this->t('Client ID'),
             '#description' => $this->t('Client ID supplied when registering your app.'),
-            '#default_value' => $config->get('sumup_client_id'),
+            '#default_value' => $encryption_service->decrypt($config->get('sumup_client_id'), $profile),
             '#maxlength' => '255',
             '#required' => true
         );
@@ -101,7 +102,7 @@ class SumUpAuthForm extends ConfigFormBase {
             '#type' => 'textfield',
             '#title' => $this->t('Client Secret'),
             '#description' => $this->t('Client secret key supplied when registering app.'),
-            '#default_value' => $config->get('sumup_client_secret'),
+            '#default_value' => $encryption_service->decrypt($config->get('sumup_client_secret'), $profile),
             '#maxlength' => '255',
             '#required' => true
         );
@@ -148,6 +149,32 @@ class SumUpAuthForm extends ConfigFormBase {
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
+        // load the named encryption profile
+        $encryption_profile_id = $form_state->getValue('sumup_key_encryption_setting');
+        $encryption_profile = EncryptionProfile::load($encryption_profile_id);
+        $encryption_service = \Drupal::service('encryption');
+
+        // save the configured form settings.
+        if(isset($encryption_profile)) {
+            $this->configFactory
+            ->getEditable('sumup.registered_app_settings')
+            ->set('sumup_client_id',$form_state->getValue('sumup_client_id'))
+            ->set('sumup_client_secret',$encryption_service->encrypt($form_state->getValue('sumup_client_secret'), $encryption_profile))
+            ->set('sumup_key_encryption_setting', $form_state->getValue('sumup_key_encryption_setting'))
+            ->set('sumup_application_scopes', $form_state->getValue('sumup_application_scopes'))
+            ->save();
+        } else {
+            // let's force encryption for safety.
+            // send a message to notify the user that we require encryption.\
+            
+            // $this->configFactory
+            // ->getEditable('sumup.registered_app_settings')
+            // ->set('sumup_client_id',$form_state->getValue('sumup_client_id'))
+            // ->set('sumup_client_secret',$form_state->getValue('sumup_client_secret'))
+            // ->set('sumup_key_encryption_setting', $form_state->getValue('sumup_key_encryption_setting'))
+            // ->save();
+        }
+
         parent::submitForm($form, $form_state);
     }
 
@@ -158,6 +185,7 @@ class SumUpAuthForm extends ConfigFormBase {
         $encryption_service = $this->encryption_service;
         $sumup = $this->sumup_auth_service;
         // set field before processing authentication request.
+        
         $sumup->requestScopeAccess();
         return;
     }

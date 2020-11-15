@@ -3,7 +3,7 @@
 namespace Drupal\sumup;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\sumup\SumUpOAuth2Service;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -35,7 +35,7 @@ class SumUpController extends ControllerBase {
     /**
      * The state system.
      * 
-     * @var Drupal\Core\State\State;
+     * @var Drupal\Core\State\StateInterface;
      */
     protected $state_system;
 
@@ -62,9 +62,9 @@ class SumUpController extends ControllerBase {
         Client $http_client, 
         RequestStack $request_stack, 
         Serializer $serializer, 
-        State $state_system, 
+        StateInterface $state_system, 
         ConfigFactoryInterface $config_factory, 
-        SumUpOAuth2Servie $sumup_service) {
+        SumUpOAuth2Service $sumup_service) {
 
         $this->config_factory = $config_factory->get('sumup.registered_app_settings');
         $this->http_client = $http_client;
@@ -106,6 +106,11 @@ class SumUpController extends ControllerBase {
 
         // request access token.
         /** Incoming: code, state, error */
+        if(isset($payload['error'])) {
+            \Drupal::logger('sumup', print_r('Error Status: ' . $payload['error'], true));
+            return;
+        }
+
         if(isset($payload['code'])) {
             $code = $payload['code'];
             $sumup_service->requestToken($code); 

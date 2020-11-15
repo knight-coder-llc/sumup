@@ -1,6 +1,6 @@
 name: Sumup Payment Gateway
 description: Implements payment processing using SumUp Api.
-package: Sumup
+package: SumUp
 dependencies:
     - encrypt:encrypt
 type: module
