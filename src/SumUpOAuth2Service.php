@@ -57,7 +57,39 @@ class SumUpOAuth2Service {
         $response = $client->request('GET', 'https://api.sumup.com/authorize', $opts);
         
         if($response->getStatusCode() != 200) {
-            \Drupal::logger('sumup', print_r('Response Status: ' . $response->getStatusCode(), true));
+            \Drupal::logger('sumup', print_r('OAuth2 Flow Response Status: ' . $response->getStatusCode(), true));
+            return;
+        }
+
+        return;
+    }
+
+    /**
+     * Request using client credentials flow authorization
+     */
+    public function clientCredentialsFlow() {
+        $config = $this->config_factory('sumup.registered_app_settings');
+        $client = $this->http_client;
+
+        $client_id = $config->get('sumup_client_id');
+        $client_secret = $config->get('sumup_client_secret');
+        $redirect_uri = $config->get('sumup_redirect_uri');
+        $scopes = $config->get('sumup_application_scopes');
+
+        /** grant_type, client_id, client_secret */
+        $post_data = array(
+            'grant_type' => 'client_credentials',
+            'client_id' => $client_id,
+            'client_secret' => $client_secret,
+        );
+
+        $response = $client->request('POST', 'https://api.sumup.com/token', [
+            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+            'body' => $post_data
+        ]);
+        
+        if($response->getStatusCode() != 200) {
+            \Drupal::logger('sumup', print_r('Client Credentials Flow Response Status: ' . $response->getStatusCode(), true));
             return;
         }
 
@@ -127,10 +159,10 @@ class SumUpOAuth2Service {
         $expire_time = time() + $payload['expires_in'];
 
         $state->setMultiple([
-            'sumup.access_token' => $payload['access_token'],
-            'sumup.token_type' => $payload['token_type'],
-            'sumup.expires_in' => $payload['expires_in'],
-            'sumup.refresh_token' => $payload['refresh_token'],
+            'sumup.access_token' => (isset($payload['access_token'])) ? $payload['access_token'] : null,
+            'sumup.token_type' => (isset($payload['token_type'])) ? $payload['token_type'] : null,
+            'sumup.expires_in' => (isset($payload['expires_in'])) ? $payload['expires_in'] : null,
+            'sumup.refresh_token' => (isset($payload['refresh_token'])) ? $payload['refresh_token'] : null,
             'sumup.token_timestamp' => $expire_time
         ]);
     }

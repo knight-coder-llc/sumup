@@ -1,15 +1,17 @@
-(function (Drupal, $) {
+(function (Drupal, drupalSettings, $) {
     "use strict";
     Drupal.Behaviours.sumupCreateCheckout = {
         attach: async function(context, settings) {
             
             const data = {
                 "checkout_reference": "C07464d3",
-                "amount": 1,
+                "amount": 0,
                 "currency": "EUR",
                 "pay_to_email": "email.com",
-                "description": "Test iptv line"
+                "description": "Testing"
             };
+
+            console.log('do we have an access token? ' + drupalSettings.state_api.access_token);
 
             const checkout_id = await fetch('https://api.sumup.com/v0.1/checkouts', {
                 method: 'POST',
@@ -17,7 +19,7 @@
                 cache: 'no-cache',
                 credentials: 'same-origin',
                 headers: {
-                    'Authorization': 'Bearer 565e2d19cef68203170ddadb952141326d14e03f4ccbd46daa079c26c910a864',
+                    'Authorization': 'Bearer ' + drupalSettings.state_api.access_token,
                     'Content-Type': 'application/json'
                 },
                 redirect: 'follow',
@@ -35,4 +37,4 @@
         }
     }
     
-}) (Drupal, jQuery);
+}) (Drupal, drupalSettings, jQuery);

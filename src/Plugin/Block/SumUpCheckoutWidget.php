@@ -44,8 +44,17 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
                 'library' => [
                     'sumup.gateway',
                     'sumup.card'
+                ],
+                'drupalSettings' => [
+                    'state_api' => [ 
+                        'access_token' => $this->getAccessToken() 
+                        ]
                 ]
             ]
         ];
+    }
+
+    public function getAccessToken() {
+        return 'test-token-12345';
     }
 }

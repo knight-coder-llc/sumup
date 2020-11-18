@@ -187,11 +187,18 @@ class SumUpAuthForm extends ConfigFormBase {
      * Generate authorization key process.
      */
     protected function process_oauth() {
+        $config = $this->config('sumup.registered_app_settings');
         $encryption_service = $this->encryption_service;
         $sumup = $this->sumup_auth_service;
         // set field before processing authentication request.
+        $credentials_flow = $config->get('sumup_client_credentials_flow');
+
+        if(!$credentials_flow) {
+          $sumup->requestScopeAccess();  
+        } else {
+            $sumup->clientCredentialsFlow();
+        }
         
-        $sumup->requestScopeAccess();
         return;
     }
 }
