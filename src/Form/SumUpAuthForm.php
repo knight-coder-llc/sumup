@@ -137,6 +137,13 @@ class SumUpAuthForm extends ConfigFormBase {
             '#multiple' => true
         );
 
+        $form['sumup_client_credentials_flow'] = array(
+            '#type' => 'checkbox',
+            '#title' => $this->t('Use Client Credentials Flow Authentication'),
+            '#default_value' => $config->get('sumup_client_credentials_flow'),
+            '#return_value' => true
+        );
+
         $form['actions']['oauth_request'] = array(
             '#type' => 'button',
             '#value' => $this->t('Authorize'),
@@ -163,6 +170,7 @@ class SumUpAuthForm extends ConfigFormBase {
         ->set('sumup_client_secret',$encryption_service->encrypt($form_state->getValue('sumup_client_secret'), $encryption_profile))
         ->set('sumup_key_encryption_setting', $form_state->getValue('sumup_key_encryption_setting'))
         ->set('sumup_application_scopes', $form_state->getValue('sumup_application_scopes'))
+        ->set('sumup_client_credentials_flow', $form_state->getValue('sumup_client_credentials_flow'))
         ->save();
     
         parent::submitForm($form, $form_state);

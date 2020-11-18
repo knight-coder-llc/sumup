@@ -20,3 +20,6 @@ sumup.registered_app_settings:
     sumup_key_encryption_setting:
       type: string
       label: 'Encryption Profile'
+    sumup_client_credentials_flow:
+      type: boolean
+      label: 'Use Client Credentials Flow'
