@@ -1,6 +1,6 @@
 (function (Drupal, $) {
     "use strict";
-    Drupal.Behaviours.sumUpCheckout = {
+    Drupal.Behaviours.sumupCreateCheckout = {
         attach: async function(context, settings) {
             
             const data = {
