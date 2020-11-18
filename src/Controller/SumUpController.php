@@ -107,7 +107,11 @@ class SumUpController extends ControllerBase {
         // request access token.
         /** Incoming: code, state, error */
         if(isset($payload['error'])) {
-            \Drupal::logger('sumup', print_r('Error Status: ' . $payload['error'], true));
+            try {
+                $sumup_service->refreshAccessToken();
+            } finally {
+               \Drupal::logger('sumup', print_r('Error Status: ' . $payload['error'], true)); 
+            }
             return;
         }
 

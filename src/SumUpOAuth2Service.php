@@ -135,6 +135,7 @@ class SumUpOAuth2Service {
      * Refresh token process
      */
     public function refreshAccessToken() {
+       
         $state = $this->state_system;
         $expire_time = $state->get('sumup.token_timestamp');
         $now = time();
@@ -144,6 +145,41 @@ class SumUpOAuth2Service {
             return;
         }
 
+        $config = $this->config_factory('sumup.registered_app_settings');
+        $client = $this->http_client;
+
+        $client_id = $config->get('sumup_client_id');
+        $client_secret = $config->get('sumup_client_secret');
+        $redirect_uri = $config->get('sumup_redirect_uri');
+
+        $refresh_token = $state->get('sumup.refresh_token');
+
+        if(!$refresh_token) {
+            return;
+        }
+
+        /** grant_type, client_id, client_secret, redirect_uri, code */
+        $post_data = array(
+            'grant_type' => 'refresh_token',
+            'client_id' => $client_id,
+            'client_secret' => $client_secret,
+            'refresh_token' => $refresh_token
+        );
+
+        $response = $client->request('POST','https://api.sumup.com/token', [
+            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+            'body' => $post_data
+        ]);
+        
+        if($response->getStatusCode() != 200) {
+            \Drupal::logger('sumup', print_r('Refresh Token Response Status: ' . $response->getStatusCode(), true));
+            return;
+        }
+        /** access_token, token_type: Bearer, expires_in, refresh_token, scope */
+        $payload = json_decode($response->getBody(), true);
+        $this->saveAccessToken($payload);
+
+        return;
 
     }
 

@@ -2,6 +2,7 @@
 namespace Drupal\sumup\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -16,11 +17,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInterface {
 
     /**
+     * @var \Drupal\Core\State\StateInterface
+     */
+    protected $state_system;
+
+    /**
      * Construct.
      * 
      */
-    public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    public function __construct(array $configuration, $plugin_id, $plugin_definition, StateInterface $state_system) {
         parent::__construct($configuration, $plugin_id, $plugin_definition);
+        $this->state_system = $state_system;
     }
 
     /**
@@ -30,7 +37,8 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
         return new static(
             $configuration,
             $plugin_id,
-            $plugin_definition
+            $plugin_definition,
+            $container->get('state')
         );
     }
 
@@ -55,6 +63,9 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
     }
 
     public function getAccessToken() {
+        $state = $this->state_system;
+        $access_token = $state->get('sumup.access_token');
+        
         return 'test-token-12345';
     }
 }
