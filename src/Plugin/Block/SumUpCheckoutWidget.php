@@ -39,7 +39,13 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
      */
     public function build() {
         return [
-            '#markup' => 'test'
+            '#markup' => '<div id="sumup-card"></div>',
+            '#attached' => [
+                'library' => [
+                    'sumup.gateway',
+                    'sumup.card'
+                ]
+            ]
         ];
     }
 }
