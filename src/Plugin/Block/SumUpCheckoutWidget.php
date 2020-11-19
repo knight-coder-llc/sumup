@@ -51,8 +51,7 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
             '#markup' => '<div id="sumup-card"></div>',
             '#attached' => [
                 'library' => [
-                    'sumup.gateway',
-                    'sumup.card'
+                    'sumup/sumup.card'
                 ],
                 'drupalSettings' => [
                     'state_api' => [ 
