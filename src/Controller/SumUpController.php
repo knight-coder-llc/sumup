@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sumup;
+namespace Drupal\sumup\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\State\StateInterface;

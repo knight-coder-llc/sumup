@@ -9,10 +9,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * SumUpCheckoutWidget Block.
  * 
- * @Block {
- *  id = "sumup_checkout_widget_block"
+ * @Block (
+ *  id = "sumup_checkout_widget_block",
  *  admin_label = @Translation("Sumup Checkout Widget"),
- * }
+ *  category = @Translation("Sumup Block")
+ * )
  */
 class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInterface {
 
@@ -65,7 +66,7 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
     public function getAccessToken() {
         $state = $this->state_system;
         $access_token = $state->get('sumup.access_token');
-        
+
         return 'test-token-12345';
     }
 }
