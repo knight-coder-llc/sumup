@@ -86,12 +86,12 @@ class SumUpAuthForm extends ConfigFormBase {
             'Payments' => 'payments',
             'Payment Instruments' => 'payment_instruments'
         );
-        // ($config->get('key_encryption_setting')) ? $encryption_profile : NULL,
+        
         $form['sumup_client_id'] = array(
             '#type' => 'textfield',
             '#title' => $this->t('Client ID'),
             '#description' => $this->t('Client ID supplied when registering your app.'),
-            '#default_value' => ($config->get('sumup_client_id')) ? $encryption_service->decrypt($config->get('sumup_client_id'), $profile) : NULL,
+            '#default_value' => $config->get('sumup_client_id'),
             '#maxlength' => '255',
             '#required' => true
         );
@@ -144,9 +144,9 @@ class SumUpAuthForm extends ConfigFormBase {
         );
 
         $form['actions']['oauth_request'] = array(
-            '#type' => 'button',
+            '#type' => 'submit',
             '#value' => $this->t('Authorize'),
-            '#submit' => array('process_oauth'),
+            '#submit' => array('::process_oauth'),
             '#disabled' => ($form_state->isSubmitted()) ? true : false
         );
 
@@ -167,6 +167,7 @@ class SumUpAuthForm extends ConfigFormBase {
         ->getEditable('sumup.registered_app_settings')
         ->set('sumup_client_id',$form_state->getValue('sumup_client_id'))
         ->set('sumup_client_secret',$encryption_service->encrypt($form_state->getValue('sumup_client_secret'), $encryption_profile))
+        ->set('sumup_redirect_uri',$form_state->getValue('sumup_redirect_uri'))
         ->set('sumup_key_encryption_setting', $form_state->getValue('sumup_key_encryption_setting'))
         ->set('sumup_application_scopes', $form_state->getValue('sumup_application_scopes'))
         ->set('sumup_client_credentials_flow', $form_state->getValue('sumup_client_credentials_flow'))
@@ -185,7 +186,7 @@ class SumUpAuthForm extends ConfigFormBase {
     /**
      * Generate authorization key process.
      */
-    protected function process_oauth() {
+    public function process_oauth() {
         $config = $this->config('sumup.registered_app_settings');
         $encryption_service = $this->encryption_service;
         $sumup = $this->sumup_auth_service;
@@ -193,10 +194,13 @@ class SumUpAuthForm extends ConfigFormBase {
         $access_flow = $config->get('sumup_client_credentials_flow');
 
         if(!$access_flow) {
-          $sumup->requestScopeAccess();  
+          $payload = $sumup->requestScopeAccess();  
         } else {
-            $sumup->clientCredentialsFlow();
+            $payload = $sumup->clientCredentialsFlow();
         }
+
+        $messenger = \Drupal::messenger();
+        $messenger->addMessage($payload);
         
         return;
     }

@@ -1,6 +1,6 @@
 services:
     sumup.oauth2_authenticate:
       class: Drupal\sumup\SumUpOAuth2Service
-      arguments: ['@config.factory', '@http_client', '@state']
+      arguments: ['@config.factory', '@http_client', '@state','@serializer']
       tags:
         - {name: sumup_oauth2}

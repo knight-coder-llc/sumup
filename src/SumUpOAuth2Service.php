@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * Implements OAuth2 authentication process.
@@ -39,10 +40,10 @@ class SumUpOAuth2Service {
      */
     public function requestScopeAccess() {
         
-        $config = $this->config_factory('sumup.registered_app_settings');
+        $config = $this->config_factory->get('sumup.registered_app_settings');
         $client = $this->http_client;
-
-        $client_id = $config->get('sumup_client_id');
+        // send client_id using base64 encoding.
+        $client_id = base64_encode($config->get('sumup_client_id'));
         $redirect_uri = $config->get('sumup_redirect_uri');
         $scopes = $config->get('sumup_application_scopes');
 
@@ -58,21 +59,30 @@ class SumUpOAuth2Service {
         
         if($response->getStatusCode() != 200) {
             \Drupal::logger('sumup', print_r('OAuth2 Flow Response Status: ' . $response->getStatusCode(), true));
-            return;
         }
 
-        return;
+        $payload = json_decode($response->getBody()->getContents(), true);
+        
+        return print_r($payload, true);
     }
 
     /**
      * Request using client credentials flow authorization
      */
     public function clientCredentialsFlow() {
-        $config = $this->config_factory('sumup.registered_app_settings');
+        $config = $this->config_factory->get('sumup.registered_app_settings');
+         // load the named encryption profile
+        $encryption_profile_id = $config->get('sumup_key_encryption_setting');
+        $encryption_profile = EncryptionProfile::load($encryption_profile_id);
+        $encryption_service = \Drupal::service('encryption');
+
         $client = $this->http_client;
 
-        $client_id = $config->get('sumup_client_id');
-        $client_secret = $config->get('sumup_client_secret');
+        // send using base64 encoding
+        $client_id = base64_encode($config->get('sumup_client_id'));
+        // decode/ send using base64
+        $client_secret = base64_encode($encryption_service->decrypt($config->get('sumup_client_secret'), $encryption_profile));
+
         $redirect_uri = $config->get('sumup_redirect_uri');
         $scopes = $config->get('sumup_application_scopes');
 
@@ -82,18 +92,26 @@ class SumUpOAuth2Service {
             'client_id' => $client_id,
             'client_secret' => $client_secret,
         );
-
+        
         $response = $client->request('POST', 'https://api.sumup.com/token', [
             'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-            'body' => $post_data
+            'form_params' => $post_data,
+            'http_errors' => false
         ]);
         
         if($response->getStatusCode() != 200) {
             \Drupal::logger('sumup', print_r('Client Credentials Flow Response Status: ' . $response->getStatusCode(), true));
-            return;
         }
 
-        return;
+        $payload = json_decode($response->getBody()->getContents(), true);
+        if(isset($payload["error_message"])) {
+            $msg = $payload["error_message"];
+        } else {
+            $msg = print_r($payload, true);
+        }
+
+        return $msg;
+    
     }
 
     /**
@@ -105,8 +123,13 @@ class SumUpOAuth2Service {
         $config = $this->config_factory('sumup.registered_app_settings');
         $client = $this->http_client;
 
-        $client_id = $config->get('sumup_client_id');
-        $client_secret = $config->get('sumup_client_secret');
+        // load the named encryption profile
+        $encryption_profile_id = $config->get('sumup_key_encryption_setting');
+        $encryption_profile = EncryptionProfile::load($encryption_profile_id);
+        $encryption_service = \Drupal::service('encryption');
+
+        $client_id = base64_encode($config->get('sumup_client_id'));
+        $client_secret = base64_encode($encryption_service->decrypt($config->get('sumup_client_secret'), $encryption_profile));
         $redirect_uri = $config->get('sumup_redirect_uri');
 
         /** grant_type, client_id, client_secret, redirect_uri, code */
@@ -120,7 +143,8 @@ class SumUpOAuth2Service {
 
         $response = $client->request('POST','https://api.sumup.com/token', [
             'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-            'body' => $post_data
+            'form_params' => $post_data,
+            'http_errors' => false
         ]);
         
         if($response->getStatusCode() != 200) {
@@ -128,7 +152,9 @@ class SumUpOAuth2Service {
             return;
         }
 
-        return;
+        $payload = json_decode($response->getBody(), true);
+        
+        return $payload;
     }
 
     /**
@@ -148,8 +174,13 @@ class SumUpOAuth2Service {
         $config = $this->config_factory('sumup.registered_app_settings');
         $client = $this->http_client;
 
-        $client_id = $config->get('sumup_client_id');
-        $client_secret = $config->get('sumup_client_secret');
+        // load the named encryption profile
+        $encryption_profile_id = $config->get('sumup_key_encryption_setting');
+        $encryption_profile = EncryptionProfile::load($encryption_profile_id);
+        $encryption_service = \Drupal::service('encryption');
+
+        $client_id = base64_encode($config->get('sumup_client_id'));
+        $client_secret = base64_encode($encryption_service->decrypt($config->get('sumup_client_secret'), $encryption_profile));
         $redirect_uri = $config->get('sumup_redirect_uri');
 
         $refresh_token = $state->get('sumup.refresh_token');
@@ -168,7 +199,7 @@ class SumUpOAuth2Service {
 
         $response = $client->request('POST','https://api.sumup.com/token', [
             'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-            'body' => $post_data
+            'form_params' => $post_data
         ]);
         
         if($response->getStatusCode() != 200) {
@@ -176,7 +207,11 @@ class SumUpOAuth2Service {
             return;
         }
         /** access_token, token_type: Bearer, expires_in, refresh_token, scope */
-        $payload = json_decode($response->getBody(), true);
+        $payload = json_decode($response->getBody()->getContents(), true);
+        if(isset($payload["error_message"])) {
+            return $payload["error_message"];
+        }
+        
         $this->saveAccessToken($payload);
 
         return;
@@ -192,13 +227,13 @@ class SumUpOAuth2Service {
      */
     public function saveAccessToken($payload) {
         $state = $this->state_system;
-        $expire_time = time() + $payload['expires_in'];
+        $expire_time = time() + $payload["expires_in"];
 
         $state->setMultiple([
-            'sumup.access_token' => (isset($payload['access_token'])) ? $payload['access_token'] : null,
-            'sumup.token_type' => (isset($payload['token_type'])) ? $payload['token_type'] : null,
-            'sumup.expires_in' => (isset($payload['expires_in'])) ? $payload['expires_in'] : null,
-            'sumup.refresh_token' => (isset($payload['refresh_token'])) ? $payload['refresh_token'] : null,
+            'sumup.access_token' => (isset($payload["access_token"])) ? $payload["access_token"] : null,
+            'sumup.token_type' => (isset($payload["token_type"])) ? $payload["token_type"] : null,
+            'sumup.expires_in' => (isset($payload["expires_in"])) ? $payload["expires_in"] : null,
+            'sumup.refresh_token' => (isset($payload["refresh_token"])) ? $payload["refresh_token"] : null,
             'sumup.token_timestamp' => $expire_time
         ]);
     }

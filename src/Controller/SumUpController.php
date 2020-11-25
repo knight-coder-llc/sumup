@@ -99,30 +99,32 @@ class SumUpController extends ControllerBase {
         $request = $request_stack->getCurrentRequest();
         $sumup_service = $this->sumup_service;
 
-        $payload = $this->decode(
-            $request->getContent(),
-            $request->getContentType()
-        );
+        // $payload = $this->decode(
+        //     $request->getContent(),
+        //     $request->getContentType()
+        // );
+
+        $payload = json_decode($response->getBody()->getContents(), true);
 
         // request access token.
         /** Incoming: code, state, error */
-        if(isset($payload['error'])) {
+        if(isset($payload["error"])) {
             try {
                 $sumup_service->refreshAccessToken();
             } finally {
-               \Drupal::logger('sumup', print_r('Error Status: ' . $payload['error'], true)); 
+               \Drupal::logger('sumup', print_r('Error Status: ' . $payload["error"], true)); 
             }
             return;
         }
 
-        if(isset($payload['code'])) {
-            $code = $payload['code'];
+        if(isset($payload["code"])) {
+            $code = $payload["code"];
             $sumup_service->requestToken($code); 
         }
         
         // store the payload.
         /** Incoming: access_token, token_type, expires_in, refresh_token */
-        if(isset($payload['access_token'])) {
+        if(isset($payload["access_token"])) {
             // encrption services?
             $sumup_service->saveAccessToken($payload);    
         }
