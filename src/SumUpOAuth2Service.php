@@ -152,7 +152,7 @@ class SumUpOAuth2Service {
             return;
         }
 
-        $payload = json_decode($response->getBody(), true);
+        $payload = json_decode($response->getBody()->getContents(), true);
         
         return $payload;
     }
@@ -236,5 +236,7 @@ class SumUpOAuth2Service {
             'sumup.refresh_token' => (isset($payload["refresh_token"])) ? $payload["refresh_token"] : null,
             'sumup.token_timestamp' => $expire_time
         ]);
+
+        return;
     }
 }

@@ -66,6 +66,6 @@ class SumUpCheckoutWidget extends BlockBase implements ContainerFactoryPluginInt
         $state = $this->state_system;
         $access_token = $state->get('sumup.access_token');
 
-        return 'test-token-12345';
+        return $access_token;
     }
 }

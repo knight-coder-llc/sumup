@@ -2,12 +2,12 @@
     "use strict";
     Drupal.behaviors.sumupCreateCheckout = {
         attach: async function(context, settings) {
-            
+            // we need to figure out how to get product details.
             const data = {
                 "checkout_reference": "C07464d3",
                 "amount": 0,
                 "currency": "EUR",
-                "pay_to_email": "email.com",
+                "merchant_code": "email.com",
                 "description": "Testing"
             };
 

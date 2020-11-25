@@ -104,7 +104,7 @@ class SumUpController extends ControllerBase {
         //     $request->getContentType()
         // );
 
-        $payload = json_decode($response->getBody()->getContents(), true);
+        $payload = json_decode($request->getBody()->getContents(), true);
 
         // request access token.
         /** Incoming: code, state, error */
@@ -119,14 +119,16 @@ class SumUpController extends ControllerBase {
 
         if(isset($payload["code"])) {
             $code = $payload["code"];
-            $sumup_service->requestToken($code); 
+            $sumup_service->requestToken($code);
+            \Drupal::logger('sumup', 'Requested Token.'); 
         }
         
         // store the payload.
         /** Incoming: access_token, token_type, expires_in, refresh_token */
         if(isset($payload["access_token"])) {
-            // encrption services?
-            $sumup_service->saveAccessToken($payload);    
+            // encryption services?
+            $sumup_service->saveAccessToken($payload);
+            \Drupal::logger('sumup', 'Saved token to state.');   
         }
 
         return;
