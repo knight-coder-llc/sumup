@@ -6,7 +6,6 @@ use GuzzleHttp\Client;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Symfony\Component\Serializer\Serializer;
 
 /**
  * Implements OAuth2 authentication process.
