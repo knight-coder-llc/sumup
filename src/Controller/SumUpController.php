@@ -7,7 +7,6 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\sumup\SumUpOAuth2Service;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,13 +23,6 @@ class SumUpController extends ControllerBase {
      * @var Symfony\Component\HttpFoundation\RequestStack
      */
     protected $request_stack;
-
-    /**
-     * The serializer
-     * 
-     * @var \Symfony\Component\Serializer\Serializer
-     */
-    protected $serializer;
 
     /**
      * The state system.
@@ -61,7 +53,6 @@ class SumUpController extends ControllerBase {
     public function __construct(
         Client $http_client, 
         RequestStack $request_stack, 
-        Serializer $serializer, 
         StateInterface $state_system, 
         ConfigFactoryInterface $config_factory, 
         SumUpOAuth2Service $sumup_service) {
@@ -69,7 +60,6 @@ class SumUpController extends ControllerBase {
         $this->config_factory = $config_factory->get('sumup.registered_app_settings');
         $this->http_client = $http_client;
         $this->request_stack = $request_stack;
-        $this->serializer = $serializer;
         $this->state_system = $state_system;
         $this->sumup_service = $sumup_service;
 
@@ -82,7 +72,6 @@ class SumUpController extends ControllerBase {
         return new static(
             $container->get('http_client'),
             $container->get('request_stack'),
-            $container->get('serializer'),
             $container->get('state'),
             $container->get('config.factory'),
             $container->get('sumup.oauth2_authenticate')
@@ -98,11 +87,6 @@ class SumUpController extends ControllerBase {
         $request_stack = $this->request_stack;
         $request = $request_stack->getCurrentRequest();
         $sumup_service = $this->sumup_service;
-
-        // $payload = $this->decode(
-        //     $request->getContent(),
-        //     $request->getContentType()
-        // );
 
         $payload = json_decode($request->getBody()->getContents(), true);
 
@@ -132,12 +116,5 @@ class SumUpController extends ControllerBase {
         }
 
         return;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function decode($data, $format, array $context = []) {
-        return $this->serializer->decode($data, $format);
     }
 }
